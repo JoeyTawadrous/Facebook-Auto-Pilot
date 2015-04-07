@@ -1,9 +1,9 @@
 <?php
-	include_once("inc/facebook.php");
+	include_once("lib/facebook.php");
 	include_once("config.php");
 
 	$maxDelayTime = 8; // Set the max delay in seconds between api requests
-	$maxGroups = 1; // Set the max amount of groups to post to
+	$maxGroups = 5; // Set the max amount of groups to post to
 
 	
 	if( $facebookUser ) { // user is logged in => get groups
@@ -22,6 +22,8 @@
 
 
 	if( $facebookUser && !empty($groups) ) {
+		writeToLogs("\n\n\nPosting to Facebook Walls [" . date("Y-m-d h:i:sa", time()) . "]");
+		writeToLogs("\n----------------------------------------");
 
 		foreach( $groups as $group ) {
 
@@ -34,24 +36,21 @@
 
 				$message = array(
 					'message' => 'Hello World!',
-					'link' => 'http://YOUR_LINK.com',
+					'link' => 'http://applandr.com',
 				);
 				
 				if ($facebookUser) {
-					writeToLogs("\n\n\n Posting to Facebook Walls [" . date("Y-m-d h:i:sa", time()) . "]");
-					writeToLogs("\n ----------------------------------------");
-
 					$groupUrl = "http://www.facebook.com/groups/" . $group["gid"];
 
 				  	try {
 						$postResult = $facebook->api($post_url, 'post', $message);
 
-						$logMessage = "\n SUCCESS: posting message to $groupUrl";
+						$logMessage = "\nSUCCESS: posting message to $groupUrl";
 						writeToLogs($logMessage);
-						echo "SUCCESS: posting message to <a href='$groupUrl' target='_blank'>" . $group['name'] . "</a><br>";
+						echo "<br>SUCCESS: posting message to <a href='$groupUrl' target='_blank'>" . $group['name'] . "</a>";
 					} 
 					catch (FacebookApiException $e) {
-						$logMessage = "\n FAIL: posting message to '" . $groupUrl . "' with ERROR: " . $e->getMessage();
+						$logMessage = "\nFAIL: posting message to '" . $groupUrl . "' with ERROR: " . $e->getMessage();
 						writeToLogs($logMessage);
 						echo "<br>FAIL: posting message to <a href='$groupUrl' target='_blank'>" . $group['name'] . "</a> with ERROR: " . $e->getMessage();
 				  	}

@@ -1,6 +1,6 @@
 <?php 
-	$appId = 'YOUR_FACEBOOK_APP_ID'; 
-	$appSecret = 'YOUR_FACEBOOK_APP_SECRET';
+	$appId = 'YOUR_APP_ID'; 
+	$appSecret = 'YOUR_APP_SECRET';
 	$fbPermissions = 'publish_actions, user_groups'; 
 
 	$facebook = new Facebook(array(

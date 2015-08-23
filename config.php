@@ -1,11 +1,12 @@
 <?php 
-	$appId = 'YOUR_APP_ID'; 
-	$appSecret = 'YOUR_APP_SECRET';
-	$fbPermissions = 'publish_actions, user_groups'; 
+	session_start();
 
-	$facebook = new Facebook(array(
-	  'appId'  => $appId,
-	  'secret' => $appSecret
-	));
-	$facebookUser = $facebook->getUser();
+	$appId = ''; 
+	$appSecret = '';
+	$requiredPermissions = 'public_profile, publish_actions, user_groups'; 
+	$redirectURL = ''; // FB will redirect to this page with a code
+ 	
+ 	$minDelayTime = 20; // Set the min delay in seconds between api requests
+	$maxDelayTime = 40; // Set the max delay in seconds between api requests
+	$maxGroups = 1; // Set the max amount of groups to post to
 ?>

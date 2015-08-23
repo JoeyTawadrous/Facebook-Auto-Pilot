@@ -1,65 +1,102 @@
 <?php
-	include_once("lib/facebook.php");
 	include_once("config.php");
-
-	$maxDelayTime = 8; // Set the max delay in seconds between api requests
-	$maxGroups = 5; // Set the max amount of groups to post to
-
 	
-	if( $facebookUser ) { // user is logged in => get groups
-	  	try {
-			$getGroupsMemberOf = 'SELECT gid, name FROM group WHERE gid IN (SELECT gid FROM group_member WHERE uid = ' . $facebookUser . ')'; // Get groups I'm a member of
-			// $getGroupsAdminOf = 'SELECT gid, name FROM group WHERE gid IN (SELECT gid FROM group_member WHERE uid = ' . $facebookUser . ' AND administrator = 'true')'; // Get groups I'm an admin of
-			// $getPagesAdminOf = 'SELECT page_id, name, page_url FROM page WHERE page_id IN (SELECT page_id FROM page_admin WHERE uid = ' . $facebookUser . ')'; // Get pages I'm an admin of
+	require_once __DIR__ . "/lib/facebook-php-sdk-v4-4.0-dev/autoload.php"; //include autoload from SDK folder
+	use Facebook\FacebookSession;
+	use Facebook\FacebookRequest;
+	use Facebook\GraphUser;
+	use Facebook\FacebookRedirectLoginHelper;
 
-			$groups = $facebook->api( array ('method' => 'fql.query', 'query' => $getGroupsMemberOf) ); // FQL === Facebook Query Language
-		} 
-		catch( FacebookApiException $e ) {
-			echo $e->getMessage();
-			$facebookUser = null;
-	  	}
+
+	FacebookSession::setDefaultApplication($appId , $appSecret);
+	$helper = new FacebookRedirectLoginHelper($redirectURL);
+
+	try {
+	  $session = $helper->getSessionFromRedirect();
+	} 
+	catch(FacebookRequestException $ex) {
+		die("FacebookRequestException: " . $ex->getMessage());
+	} 
+	catch(\Exception $ex) {
+		die("Exception: " . $ex->getMessage());
 	}
 
 
-	if( $facebookUser && !empty($groups) ) {
-		writeToLogs("\n\n\nPosting to Facebook Walls [" . date("Y-m-d h:i:sa", time()) . "]");
-		writeToLogs("\n----------------------------------------");
+	// if I'm logged in and ready to post on group pages
+	if ($session) { 
 
-		foreach( $groups as $group ) {
+		$groups = (new FacebookRequest(
+			$session,
+			'GET',
+			'/me/groups'
+		))->execute()->getGraphObject()->asArray();
+		$_SESSION["groups"] = $groups["data"]; 
 
-			if($maxGroups > 0) {
 
-				$maxGroups = $maxGroups - 1;
+		if(isset($_SESSION["groups"])) {
+			echo 'Hi, you are logged into Facebook [ <a href="?logOut=1">Log Out</a> ] ';
+			
+			writeToLogs("\n\n\nPosting to Facebook Walls [" . date("Y-m-d h:i:sa", time()) . "]");
+			writeToLogs("\n----------------------------------------");
 
-				// POST to GROUP_ID/feed with the publish_stream
-				$post_url = '/' . $group["gid"] . '/feed';
-
-				$message = array(
-					'message' => 'Hello World!',
-					'link' => 'http://applandr.com',
-				);
+			for($i = 0; $i < $maxGroups; $i++) {
 				
-				if ($facebookUser) {
-					$groupUrl = "http://www.facebook.com/groups/" . $group["gid"];
+				$group = $_SESSION["groups"][$i];
+
+				// exclude certain groups
+				$continue = true;
+				if (strpos($group->name,'Science') !== false) { $continue = false; }
+				else if (strpos($group->name,'Udemy') !== false) { $continue = false; }
+				else if (strpos($group->name,'JCI') !== false) { $continue = false; }
+				else if (strpos($group->name,'Cappamore') !== false) { $continue = false; }
+
+				if($continue) {
+					$postURL = '/' . $group->id . '/feed';
+
+					$message = array(
+						'message' => 'Hey guys!
+
+						Thought I’d give something back to the community :)
+
+					 	Check out v2 of AppLandr, which allows you to generate beautifully crafted (free or paid) landing pages for your mobile applications! And of course it’s on Product Hunt!
+						
+						Would love to hear your thoughts!
+						
+						http://applandr.com',
+						'link' => 'http://applandr.com',
+						'picture' => 'http://www.applandr.com/lib/images/dark.png'
+					);
+					
+					$groupUrl = "http://www.facebook.com/groups/" . $group->id;
 
 				  	try {
-						$postResult = $facebook->api($post_url, 'post', $message);
-
+						$postRequest = new FacebookRequest($session, 'POST', $postURL, $message);
+				  		$postResponse = $postRequest->execute()->getGraphObject()->asArray();
+				
 						$logMessage = "\nSUCCESS: posting message to $groupUrl";
 						writeToLogs($logMessage);
-						echo "<br>SUCCESS: posting message to <a href='$groupUrl' target='_blank'>" . $group['name'] . "</a>";
+						echo "<br>SUCCESS: posting message to <a href='$groupUrl' target='_blank'>" . $group->name . "</a>";
 					} 
 					catch (FacebookApiException $e) {
-						$logMessage = "\nFAIL: posting message to '" . $groupUrl . "' with ERROR: " . $e->getMessage();
+						$logMessage = "\nFAIL: posting message to " . $groupUrl . " with ERROR: " . $e->getMessage();
 						writeToLogs($logMessage);
-						echo "<br>FAIL: posting message to <a href='$groupUrl' target='_blank'>" . $group['name'] . "</a> with ERROR: " . $e->getMessage();
+						echo "<br>FAIL: posting message to <a href='$groupUrl' target='_blank'>" . $group->name . "</a> with ERROR: " . $e->getMessage();
 				  	}
 
-				  	$delayTime = rand(3, $maxDelayTime);
+				  	$delayTime = rand($minDelayTime, $maxDelayTime);
 	 				sleep($delayTime);
 				}
 			}
 		}
+	} else { 
+		$loginURL = $helper->getLoginUrl( array( 'scope' => $requiredPermissions ) );
+		echo '<a href="'.$loginURL.'">Login with Facebook</a>'; 
+	}
+
+
+	if(isset($_GET["logOut"]) && $_GET["logOut"]==1){
+		unset($_SESSION["groups"]);
+		header("location: ". $redirectURL);
 	}
 
 

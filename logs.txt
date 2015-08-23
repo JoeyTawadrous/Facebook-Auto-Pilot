@@ -1,0 +1,12 @@
+
+
+
+Posting to Facebook Walls [2015-08-23 04:04:35pm]
+----------------------------------------
+SUCCESS: posting message to http://www.facebook.com/groups/408300809376888
+SUCCESS: posting message to http://www.facebook.com/groups/159135974236413
+
+
+Posting to Facebook Walls [2015-08-23 04:17:48pm]
+----------------------------------------
+SUCCESS: posting message to http://www.facebook.com/groups/408300809376888

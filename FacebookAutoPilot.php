@@ -32,59 +32,63 @@
 		))->execute()->getGraphObject()->asArray();
 		$_SESSION["groups"] = $groups["data"]; 
 
+		echo "Total Groups: " . count($groups["data"]);
 
 		if(isset($_SESSION["groups"])) {
-			echo 'Hi, you are logged into Facebook [ <a href="?logOut=1">Log Out</a> ] ';
+			echo '<br>Hi, you are logged into Facebook [ <a href="?logOut=1">Log Out</a> ] ';
 			
 			writeToLogs("\n\n\nPosting to Facebook Walls [" . date("Y-m-d h:i:sa", time()) . "]");
 			writeToLogs("\n----------------------------------------");
 
 			for($i = 0; $i < $maxGroups; $i++) {
 				
-				$group = $_SESSION["groups"][$i];
+				if($_SESSION["groups"][$i]) {
+					$group = $_SESSION["groups"][$i];
 
-				// exclude certain groups
-				$continue = true;
-				if (strpos($group->name,'Science') !== false) { $continue = false; }
-				else if (strpos($group->name,'Udemy') !== false) { $continue = false; }
-				else if (strpos($group->name,'JCI') !== false) { $continue = false; }
-				else if (strpos($group->name,'Cappamore') !== false) { $continue = false; }
+					// exclude certain groups
+					$continue = true;
+					if (strpos($group->name,'Science') !== false) { $continue = false; }
+					else if (strpos($group->name,'UCC') !== false) { $continue = false; }
+					else if(strpos($group->name,'Udemy') !== false) { $continue = false; }
+					else if (strpos($group->name,'JCI') !== false) { $continue = false; }
+					else if (strpos($group->name,'Cappamore') !== false) { $continue = false; }
 
-				if($continue) {
-					$postURL = '/' . $group->id . '/feed';
+					if($continue) {
+						$postURL = '/' . $group->id . '/feed';
 
-					$message = array(
-						'message' => 'Hey guys!
+						$message = array(
+							'message' => 'Hey guys!
 
-						Thought I’d give something back to the community :)
+							Thought I’d give something back to the community :)
 
-					 	Check out v2 of AppLandr, which allows you to generate beautifully crafted (free or paid) landing pages for your mobile applications! And of course it’s on Product Hunt!
+						 	Check out v2 of AppLandr, which allows you to generate beautifully crafted (free or paid) landing pages for your mobile applications! And of course it’s on Product Hunt!
+							
+							Would love to hear your thoughts!
+							
+							http://applandr.com',
+							'link' => 'http://applandr.com',
+							'picture' => 'http://www.applandr.com/lib/images/dark.png'
+						);
 						
-						Would love to hear your thoughts!
-						
-						http://applandr.com',
-						'link' => 'http://applandr.com',
-						'picture' => 'http://www.applandr.com/lib/images/dark.png'
-					);
+						$groupUrl = "http://www.facebook.com/groups/" . $group->id;
+
+					  	try {
+							$postRequest = new FacebookRequest($session, 'POST', $postURL, $message);
+					  		$postResponse = $postRequest->execute()->getGraphObject()->asArray();
 					
-					$groupUrl = "http://www.facebook.com/groups/" . $group->id;
+							$logMessage = "\nSUCCESS: posting message to $groupUrl";
+							writeToLogs($logMessage);
+							echo "<br>SUCCESS: posting message to <a href='$groupUrl' target='_blank'>" . $group->name . "</a>";
+						} 
+						catch (FacebookApiException $e) {
+							$logMessage = "\nFAIL: posting message to " . $groupUrl . " with ERROR: " . $e->getMessage();
+							writeToLogs($logMessage);
+							echo "<br>FAIL: posting message to <a href='$groupUrl' target='_blank'>" . $group->name . "</a> with ERROR: " . $e->getMessage();
+					  	}
 
-				  	try {
-						$postRequest = new FacebookRequest($session, 'POST', $postURL, $message);
-				  		$postResponse = $postRequest->execute()->getGraphObject()->asArray();
-				
-						$logMessage = "\nSUCCESS: posting message to $groupUrl";
-						writeToLogs($logMessage);
-						echo "<br>SUCCESS: posting message to <a href='$groupUrl' target='_blank'>" . $group->name . "</a>";
-					} 
-					catch (FacebookApiException $e) {
-						$logMessage = "\nFAIL: posting message to " . $groupUrl . " with ERROR: " . $e->getMessage();
-						writeToLogs($logMessage);
-						echo "<br>FAIL: posting message to <a href='$groupUrl' target='_blank'>" . $group->name . "</a> with ERROR: " . $e->getMessage();
-				  	}
-
-				  	$delayTime = rand($minDelayTime, $maxDelayTime);
-	 				sleep($delayTime);
+					  	$delayTime = rand($minDelayTime, $maxDelayTime);
+		 				sleep($delayTime);
+					}
 				}
 			}
 		}

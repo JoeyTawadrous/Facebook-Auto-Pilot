@@ -74,17 +74,17 @@
 
 					  	try {
 							$postRequest = new FacebookRequest($session, 'POST', $postURL, $message);
-					  		$postResponse = $postRequest->execute()->getGraphObject()->asArray();
+					  		$postRequest->execute();
 					
 							$logMessage = "\nSUCCESS: posting message to $groupUrl";
 							writeToLogs($logMessage);
 							echo "<br>SUCCESS: posting message to <a href='$groupUrl' target='_blank'>" . $group->name . "</a>";
 						} 
-						catch (FacebookApiException $e) {
+						catch(FacebookRequestException $ex) {
 							$logMessage = "\nFAIL: posting message to " . $groupUrl . " with ERROR: " . $e->getMessage();
 							writeToLogs($logMessage);
 							echo "<br>FAIL: posting message to <a href='$groupUrl' target='_blank'>" . $group->name . "</a> with ERROR: " . $e->getMessage();
-					  	}
+						}
 
 					  	$delayTime = rand($minDelayTime, $maxDelayTime);
 		 				sleep($delayTime);

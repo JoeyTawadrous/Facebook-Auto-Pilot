@@ -247,7 +247,7 @@ class FacebookRequest
     // Don't catch to allow it to bubble up.
     $result = $connection->send($url, $this->method, $params);
 
-    static::$requestCount++;
+    // static::$requestCount++;
 
     $etagHit = 304 == $connection->getResponseHttpStatusCode();
 
@@ -260,13 +260,13 @@ class FacebookRequest
       parse_str($result, $out);
       return new FacebookResponse($this, $out, $result, $etagHit, $etagReceived);
     }
-    if (isset($decodedResult->error)) {
-      throw FacebookRequestException::create(
-        $result,
-        $decodedResult->error,
-        $connection->getResponseHttpStatusCode()
-      );
-    }
+    // if (isset($decodedResult->error)) {
+    //   throw FacebookRequestException::create(
+    //     $result,
+    //     $decodedResult->error,
+    //     $connection->getResponseHttpStatusCode()
+    //   );
+    // }
 
     return new FacebookResponse($this, $decodedResult, $result, $etagHit, $etagReceived);
   }

@@ -1,6 +1,8 @@
 # Facebook-Auto-Pilot
 Automate common Facebook activities such as posting to groups &amp; pages walls. 
 
+Link: https://getlearnable.com
+
 This script makes use of the Facebook API to effortlessly carry out certain tasks. 
 * Post to groups your a member or an admin of.
 * Post to pages your a member or an admin of.
